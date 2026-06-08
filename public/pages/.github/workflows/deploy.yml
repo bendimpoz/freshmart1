@@ -1,0 +1,33 @@
+name: FreshMart CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test server starts
+        run: |
+          node server.js &
+          sleep 5
+          curl http://localhost:3000/api/products
+          kill %1
+
+      - name: Build success
+        run: echo "✅ FreshMart build and test passed!"
