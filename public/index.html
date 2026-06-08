@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FreshMart — Fresh Fruits Delivered</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/">Fresh<span>Mart</span></a>
+  <div class="nav-links">
+    <a href="#products">Shop</a>
+    <a href="#why">Why Us</a>
+    <a href="#footer">Contact</a>
+  </div>
+  <button class="cart-btn" onclick="openCart()">
+    🛒 Cart <span class="cart-badge" id="cartBadge">0</span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Farm-Fresh Fruits<br/><span>Delivered to Your Door</span></h1>
+  <p>Premium quality fruits, sourced directly from Rwanda's best farms.</p>
+  <button class="hero-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+    Shop Fresh Now →
+  </button>
+  <div class="hero-stats">
+    <div class="hero-stat"><strong>500+</strong><span>Happy Customers</span></div>
+    <div class="hero-stat"><strong>30+</strong><span>Fruit Varieties</span></div>
+    <div class="hero-stat"><strong>Same Day</strong><span>Delivery in Kigali</span></div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section" id="products">
+  <div class="section-title">Fresh Picks 🌿</div>
+  <div class="section-sub">Handpicked daily from local Rwandan farms</div>
+  <div class="cats">
+    <button class="cat-btn active" onclick="filterCat('All', this)">All</button>
+    <button class="cat-btn" onclick="filterCat('Tropical', this)">🌴 Tropical</button>
+    <button class="cat-btn" onclick="filterCat('Citrus', this)">🍋 Citrus</button>
+    <button class="cat-btn" onclick="filterCat('Berries', this)">🍓 Berries</button>
+    <button class="cat-btn" onclick="filterCat('Stone Fruits', this)">🍑 Stone Fruits</button>
+    <button class="cat-btn" onclick="filterCat('Apples & Pears', this)">🍎 Apples & Pears</button>
+  </div>
+  <div id="productsGrid" class="products-grid">
+    <div class="loading">🌿 Loading fresh fruits...</div>
+  </div>
+</div>
+
+<!-- WHY US -->
+<div class="section" id="why" style="background:#fff; border-top:1px solid var(--border)">
+  <div class="section-title" style="text-align:center">Why Choose FreshMart?</div>
+  <div class="why-grid">
+    <div class="why-card"><div class="icon">🌱</div><h3>100% Organic</h3><p>No pesticides, naturally grown by certified Rwandan farmers</p></div>
+    <div class="why-card"><div class="icon">🚚</div><h3>Fast Delivery</h3><p>Same-day delivery in Kigali, next-day across Rwanda</p></div>
+    <div class="why-card"><div class="icon">✅</div><h3>Quality Guaranteed</h3><p>Every order inspected before dispatch — freshness or refund</p></div>
+    <div class="why-card"><div class="icon">📱</div><h3>Easy Ordering</h3><p>Order online, pay via Mobile Money or cash on delivery</p></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Fresh<span>Mart</span></div>
+      <p>Rwanda's freshest online fruit marketplace, connecting farms to families since 2024.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="#">Home</a><a href="#products">Shop</a><a href="#why">About</a>
+    </div>
+    <div class="footer-col">
+      <h4>Customer Service</h4>
+      <a href="#">FAQs</a><a href="#">Track Order</a><a href="#">Returns</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p>📍 KG 508 St, Kigali, Rwanda</p>
+      <p>📞 +250 791 000 123</p>
+      <p>✉️ hello@freshmart.rw</p>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 FreshMart Rwanda. All rights reserved.</div>
+</footer>
+
+<!-- CART OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <h2>Your Cart 🛒</h2>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total"><span>Total</span><span id="cartTotal">RWF 0</span></div>
+    <button class="checkout-btn" onclick="goToCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
