@@ -1,5 +1,20 @@
 let cart = [];
 
+const productImages = {
+  1: '/images/apples.jpg',
+  2: '/images/bananas.jpg',
+  3: '/images/mangoes.jpg',
+  4: '/images/oranges.jpg',
+  5: '/images/strawberries.jpg',
+  6: '/images/pineapple.jpg',
+  7: '/images/lemons.jpg',
+  8: '/images/watermelon.jpg',
+  9: '/images/grapes.jpg',
+  10: '/images/peaches.jpg',
+  11: '/images/avocados.jpg',
+  12: '/images/passion.jpg',
+};
+
 // ── Load products from API ──
 async function loadProducts(category = 'All') {
   const grid = document.getElementById('productsGrid');
@@ -22,7 +37,14 @@ function renderProducts(products) {
   }
   grid.innerHTML = products.map(p => `
     <div class="product-card">
-      <div class="product-img">${p.emoji}</div>
+      <div class="product-img" style="padding:0;overflow:hidden">
+        <img src="${productImages[p.id]}" alt="${p.name}"
+          style="width:100%;height:100%;object-fit:cover;transition:transform .3s"
+          onmouseover="this.style.transform='scale(1.05)'"
+          onmouseout="this.style.transform='scale(1)'"
+          onerror="this.parentElement.innerHTML='<span style=font-size:72px>${p.emoji}</span>'"
+        />
+      </div>
       <div class="product-body">
         <span class="product-badge ${p.badge === 'Sale' ? 'sale' : ''}">${p.badge}</span>
         <div class="product-name">${p.name}</div>
@@ -85,7 +107,12 @@ function renderCartItems() {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   el.innerHTML = cart.map(i => `
     <div class="cart-item">
-      <div class="item-emoji">${i.emoji}</div>
+      <div class="item-emoji">
+        <img src="${productImages[i.id]}" alt="${i.name}"
+          style="width:100%;height:100%;object-fit:cover;border-radius:10px"
+          onerror="this.parentElement.innerHTML='${i.emoji}'"
+        />
+      </div>
       <div class="item-info">
         <div class="item-name">${i.name}</div>
         <div class="item-price">RWF ${(i.price * i.qty).toLocaleString()}</div>
