@@ -22,17 +22,31 @@
 </nav>
 
 <!-- HERO -->
-<div class="hero">
-  <h1>Farm-Fresh Fruits<br/><span>Delivered to Your Door</span></h1>
-  <p>Premium quality fruits, sourced directly from Rwanda's best farms.</p>
-  <button class="hero-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
-    Shop Fresh Now →
-  </button>
-  <div class="hero-stats">
-    <div class="hero-stat"><strong>500+</strong><span>Happy Customers</span></div>
-    <div class="hero-stat"><strong>30+</strong><span>Fruit Varieties</span></div>
-    <div class="hero-stat"><strong>Same Day</strong><span>Delivery in Kigali</span></div>
+<div class="hero" style="position:relative;overflow:hidden">
+
+  <!-- BACKGROUND VIDEO -->
+  <video autoplay muted loop playsinline
+    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0.35">
+   <source src="/images/fruit.mp4" type="video/mp4"/>
+  </video>
+
+  <!-- DARK OVERLAY -->
+  <div style="position:absolute;inset:0;background:rgba(27,42,36,0.7);z-index:1"></div>
+
+  <!-- CONTENT -->
+  <div style="position:relative;z-index:2">
+    <h1>Farm-Fresh Fruits<br/><span>Delivered to Your Door</span></h1>
+    <p>Premium quality fruits, sourced directly from Rwanda's best farms.</p>
+    <button class="hero-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+      Shop Fresh Now →
+    </button>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>500+</strong><span>Happy Customers</span></div>
+      <div class="hero-stat"><strong>30+</strong><span>Fruit Varieties</span></div>
+      <div class="hero-stat"><strong>Same Day</strong><span>Delivery in Kigali</span></div>
+    </div>
   </div>
+
 </div>
 
 <!-- PRODUCTS -->
