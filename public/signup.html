@@ -1,17 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sign Up</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshMart Admin Signup</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#2D6A4F,#52B788);
+}
+
+.signup-container{
+  width:100%;
+  max-width:420px;
+  background:#fff;
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.logo{
+  text-align:center;
+  font-size:36px;
+  font-weight:bold;
+  color:#2D6A4F;
+  margin-bottom:10px;
+}
+
+.logo span{
+  color:#52B788;
+}
+
+h2{
+  text-align:center;
+  margin-bottom:25px;
+  color:#333;
+}
+
+.form-group{
+  margin-bottom:18px;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  font-weight:600;
+  color:#444;
+}
+
+.form-group input{
+  width:100%;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:15px;
+  outline:none;
+}
+
+.form-group input:focus{
+  border-color:#2D6A4F;
+}
+
+.signup-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:#2D6A4F;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.signup-btn:hover{
+  background:#1f513a;
+}
+
+.login-link{
+  text-align:center;
+  margin-top:20px;
+}
+
+.login-link a{
+  color:#2D6A4F;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.login-link a:hover{
+  text-decoration:underline;
+}
+
+.footer-text{
+  text-align:center;
+  margin-top:15px;
+  color:#777;
+  font-size:13px;
+}
+
+@media(max-width:500px){
+  .signup-container{
+    margin:20px;
+    padding:25px;
+  }
+}
+</style>
 </head>
-<body style="font-family:Arial;padding:40px">
 
-<h2>Create Admin Account</h2>
+<body>
 
-<input id="username" placeholder="Username"><br><br>
+<div class="signup-container">
 
-<input id="password" type="password" placeholder="Password"><br><br>
+  <div class="logo">
+    Fresh<span>Mart</span>
+  </div>
 
-<button onclick="signup()">Sign Up</button>
+  <h2>Create Admin Account</h2>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input id="username" type="text" placeholder="Enter username">
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter password">
+  </div>
+
+  <button class="signup-btn" onclick="signup()">
+    Create Account
+  </button>
+
+  <div class="login-link">
+    <a href="/pages/admin.html">Go to Admin Dashboard</a>
+  </div>
+
+  <div class="footer-text">
+    FreshMart Admin Access
+  </div>
+
+</div>
 
 <script>
 function signup(){
@@ -21,6 +162,11 @@ function signup(){
 
   const password =
     document.getElementById('password').value;
+
+  if(!username || !password){
+    alert('Please enter username and password');
+    return;
+  }
 
   localStorage.setItem('adminUser', username);
   localStorage.setItem('adminPass', password);
