@@ -42,7 +42,29 @@ nav {
   width: 18px; height: 18px; font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
+/* SIGN UP BUTTON */
+.nav-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 
+.signup-btn{
+  background:#fff;
+  color:var(--green);
+  text-decoration:none;
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  border:1px solid rgba(255,255,255,.2);
+  transition:all .2s;
+}
+
+.signup-btn:hover{
+  background:#F3F4F6;
+  transform:translateY(-1px);
+}
 /* HERO */
 .hero {
   background: linear-gradient(135deg, var(--green) 0%, #40916C 100%);

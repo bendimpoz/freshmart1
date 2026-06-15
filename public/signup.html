@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+</head>
+<body style="font-family:Arial;padding:40px">
+
+<h2>Create Admin Account</h2>
+
+<input id="username" placeholder="Username"><br><br>
+
+<input id="password" type="password" placeholder="Password"><br><br>
+
+<button onclick="signup()">Sign Up</button>
+
+<script>
+function signup(){
+
+  const username =
+    document.getElementById('username').value;
+
+  const password =
+    document.getElementById('password').value;
+
+  localStorage.setItem('adminUser', username);
+  localStorage.setItem('adminPass', password);
+
+  alert('Registration successful');
+
+  window.location.href='/pages/admin.html';
+}
+</script>
+
+</body>
+</html>
