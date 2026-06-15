@@ -80,6 +80,10 @@
 
     /* STATUS ACTIONS */
     .status-select { padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+    .form-group { display: grid; gap: 6px; }
+    .form-group label { font-size: 13px; color: #374151; font-weight: 600; }
+    .form-group input { width: 100%; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 14px; color: #111827; }
+    .form-group input:focus { outline: none; border-color: #10B981; box-shadow: 0 0 0 4px rgba(16,185,129,.08); }
 
     @media(max-width: 600px) {
       thead th:nth-child(4), tbody td:nth-child(4),
@@ -141,6 +145,7 @@
   <!-- PRODUCTS TABLE -->
   <div class="section-header">
     <h2>Products Catalogue 🍎</h2>
+    <button class="refresh-btn" onclick="openProductForm()">➕ Add Product</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -152,14 +157,38 @@
           <th>Unit</th>
           <th>Origin</th>
           <th>Badge</th>
+          <th>Stock</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="productsBody">
-        <tr><td colspan="6" class="loading">Loading products...</td></tr>
+        <tr><td colspan="8" class="loading">Loading products...</td></tr>
       </tbody>
     </table>
   </div>
 
+</div>
+
+<!-- PRODUCT FORM MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="productModalTitle">Add Product</h3>
+      <button onclick="closeProductModal()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px;">
+      <input id="productId" type="hidden">
+      <div class="form-group"><label>Name</label><input id="productName" type="text" placeholder="Red Apples"></div>
+      <div class="form-group"><label>Emoji</label><input id="productEmoji" type="text" placeholder="🍎"></div>
+      <div class="form-group"><label>Price</label><input id="productPrice" type="number" placeholder="2500"></div>
+      <div class="form-group"><label>Unit</label><input id="productUnit" type="text" placeholder="kg"></div>
+      <div class="form-group"><label>Origin</label><input id="productOrigin" type="text" placeholder="Rubavu, Rwanda"></div>
+      <div class="form-group"><label>Category</label><input id="productCategory" type="text" placeholder="Apples & Pears"></div>
+      <div class="form-group"><label>Badge</label><input id="productBadge" type="text" placeholder="Organic"></div>
+      <div class="form-group"><label>Stock</label><input id="productStock" type="number" placeholder="100"></div>
+      <button class="refresh-btn" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
 </div>
 
 <!-- ORDER DETAIL MODAL -->
@@ -258,10 +287,95 @@ async function loadProducts() {
         <td>${p.unit}</td>
         <td style="font-size:13px;color:var(--gray)">📍 ${p.origin}</td>
         <td><span style="background:var(--orange-pale);color:var(--orange);padding:2px 8px;border-radius:50px;font-size:12px;font-weight:600">${p.badge}</span></td>
+        <td>${p.stock}</td>
+        <td>
+          <button onclick="editProduct(${p.id})" style="background:#2563EB;color:#fff;border:none;padding:6px 10px;border-radius:8px;margin-right:6px;cursor:pointer;font-size:12px">Edit</button>
+          <button onclick="deleteProduct(${p.id})" style="background:#EF4444;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px">Delete</button>
+        </td>
       </tr>
     `).join('');
   } catch(e) {
-    document.getElementById('productsBody').innerHTML = '<tr><td colspan="6" class="loading">❌ Could not load products.</td></tr>';
+    document.getElementById('productsBody').innerHTML = '<tr><td colspan="8" class="loading">❌ Could not load products.</td></tr>';
+  }
+}
+
+async function openProductForm(product = null) {
+  document.getElementById('productModalTitle').textContent = product ? 'Edit Product' : 'Add Product';
+  document.getElementById('productId').value = product ? product.id : '';
+  document.getElementById('productName').value = product ? product.name : '';
+  document.getElementById('productEmoji').value = product ? product.emoji : '';
+  document.getElementById('productPrice').value = product ? product.price : '';
+  document.getElementById('productUnit').value = product ? product.unit : '';
+  document.getElementById('productOrigin').value = product ? product.origin : '';
+  document.getElementById('productCategory').value = product ? product.category : '';
+  document.getElementById('productBadge').value = product ? product.badge : '';
+  document.getElementById('productStock').value = product ? product.stock : 100;
+  document.getElementById('productModal').classList.add('open');
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+}
+
+async function saveProduct() {
+  const id = document.getElementById('productId').value;
+  const payload = {
+    name: document.getElementById('productName').value.trim(),
+    emoji: document.getElementById('productEmoji').value.trim(),
+    price: Number(document.getElementById('productPrice').value),
+    unit: document.getElementById('productUnit').value.trim(),
+    origin: document.getElementById('productOrigin').value.trim(),
+    category: document.getElementById('productCategory').value.trim(),
+    badge: document.getElementById('productBadge').value.trim(),
+    stock: Number(document.getElementById('productStock').value) || 0,
+  };
+
+  if (!payload.name || payload.price <= 0) {
+    return alert('Please enter a product name and a valid price.');
+  }
+
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `/api/products/${id}` : '/api/products';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Could not save product');
+    }
+    closeProductModal();
+    await loadProducts();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function editProduct(id) {
+  try {
+    const res = await fetch(`/api/products/${id}`);
+    const product = await res.json();
+    if (!res.ok) throw new Error(product.error || 'Could not load product');
+    openProductForm(product);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  try {
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Could not delete product');
+    }
+    await loadProducts();
+  } catch (e) {
+    alert(e.message);
   }
 }
 
@@ -295,6 +409,9 @@ function updateStatus(id, status) {
 }
 
 // Close modal on overlay click
+document.getElementById('productModal').addEventListener('click', function(e) {
+  if (e.target === this) closeProductModal();
+});
 document.getElementById('orderModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });

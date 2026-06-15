@@ -116,6 +116,56 @@ app.get('/api/products/:id', (req, res) => {
   });
 });
 
+// CREATE a product
+app.post('/api/products', (req, res) => {
+  const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
+  if (!name || price == null) {
+    return res.status(400).json({ error: 'Name and price are required' });
+  }
+
+  db.run(
+    `INSERT INTO products (name,emoji,price,unit,origin,category,badge,stock) VALUES (?,?,?,?,?,?,?,?)`,
+    [name, emoji, price, unit, origin, category, badge, stock],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      db.get('SELECT * FROM products WHERE id = ?', [this.lastID], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json(row);
+      });
+    }
+  );
+});
+
+// UPDATE a product
+app.put('/api/products/:id', (req, res) => {
+  const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
+  if (!name || price == null) {
+    return res.status(400).json({ error: 'Name and price are required' });
+  }
+
+  db.run(
+    `UPDATE products SET name = ?, emoji = ?, price = ?, unit = ?, origin = ?, category = ?, badge = ?, stock = ? WHERE id = ?`,
+    [name, emoji, price, unit, origin, category, badge, stock, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: 'Product not found' });
+      db.get('SELECT * FROM products WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(row);
+      });
+    }
+  );
+});
+
+// DELETE a product
+app.delete('/api/products/:id', (req, res) => {
+  db.run('DELETE FROM products WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json({ success: true });
+  });
+});
+
 // POST place an order
 app.post('/api/orders', (req, res) => {
   const { customer, items, total, payment_method, delivery_date } = req.body;
