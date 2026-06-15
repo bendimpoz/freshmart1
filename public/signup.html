@@ -52,24 +52,12 @@ h2{
   margin-bottom:18px;
 }
 
-.form-group label{
-  display:block;
-  margin-bottom:6px;
-  font-weight:600;
-  color:#444;
-}
-
 .form-group input{
   width:100%;
   padding:12px;
   border:1px solid #ddd;
   border-radius:10px;
   font-size:15px;
-  outline:none;
-}
-
-.form-group input:focus{
-  border-color:#2D6A4F;
 }
 
 .signup-btn{
@@ -110,13 +98,6 @@ h2{
   color:#777;
   font-size:13px;
 }
-
-@media(max-width:500px){
-  .signup-container{
-    margin:20px;
-    padding:25px;
-  }
-}
 </style>
 </head>
 
@@ -131,21 +112,21 @@ h2{
   <h2>Create Admin Account</h2>
 
   <div class="form-group">
-    <label>Username</label>
-    <input id="username" type="text" placeholder="Enter username">
+    <input id="username" type="text" placeholder="Username">
   </div>
 
   <div class="form-group">
-    <label>Password</label>
-    <input id="password" type="password" placeholder="Enter password">
+    <input id="password" type="password" placeholder="Password">
   </div>
 
+  <!-- CHANGED BUTTON TEXT -->
   <button class="signup-btn" onclick="signup()">
-    Create Account
+    Sign Up
   </button>
 
+  <!-- CHANGED TEXT -->
   <div class="login-link">
-    <a href="/pages/admin.html">Go to Admin Dashboard</a>
+    <a href="/pages/admin.html">Login as Admin</a>
   </div>
 
   <div class="footer-text">
@@ -171,7 +152,7 @@ function signup(){
   localStorage.setItem('adminUser', username);
   localStorage.setItem('adminPass', password);
 
-  alert('Registration successful');
+  alert('Account created successfully');
 
   window.location.href='/pages/admin.html';
 }
