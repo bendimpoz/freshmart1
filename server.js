@@ -1,16 +1,23 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change_this_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
 
 // Create & connect database
 const db = new sqlite3.Database('./freshmart.db', (err) => {
@@ -65,9 +72,16 @@ db.serialize(() => {
     FOREIGN KEY (product_id) REFERENCES products(id)
   )`);
 
+  db.run(`CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   // Seed products if empty
   db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
-    if (row.count === 0) {
+    if (row && row.count === 0) {
       const products = [
         ['Red Apples','🍎',2500,'kg','Rubavu, Rwanda','Apples & Pears','Organic'],
         ['Bananas','🍌',800,'bunch','Kirehe, Rwanda','Tropical','Best Seller'],
@@ -90,9 +104,76 @@ db.serialize(() => {
   });
 });
 
-// ========== API ROUTES ==========
+// Helper: auth middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.userId) return next();
+  return res.status(401).json({ error: 'Unauthorized' });
+}
 
-// GET all products
+// ========== AUTH ROUTES ==========
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+
+  db.get('SELECT id FROM admins WHERE username = ?', [username], async (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row) return res.status(400).json({ error: 'Username already exists' });
+
+    try {
+      const hash = await bcrypt.hash(password, 10);
+      db.run('INSERT INTO admins (username, password_hash) VALUES (?, ?)', [username, hash], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        req.session.userId = this.lastID;
+        req.session.username = username;
+        res.json({ success: true });
+      });
+    } catch (e) {
+      res.status(500).json({ error: 'Hashing error' });
+    }
+  });
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+
+  db.get('SELECT * FROM admins WHERE username = ?', [username], async (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(400).json({ error: 'Invalid credentials' });
+
+    const match = await bcrypt.compare(password, row.password_hash);
+    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+
+    req.session.userId = row.id;
+    req.session.username = row.username;
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ error: 'Failed to logout' });
+    res.json({ success: true });
+  });
+});
+
+app.get('/api/me', (req, res) => {
+  if (req.session && req.session.userId) {
+    return res.json({ id: req.session.userId, username: req.session.username });
+  }
+  res.status(401).json({ error: 'Unauthorized' });
+});
+
+// Protect admin page serving
+app.get('/pages/admin.html', (req, res, next) => {
+  if (req.session && req.session.userId) {
+    return res.sendFile(path.join(__dirname, 'public', 'pages', 'admin.html'));
+  }
+  // if not logged in, redirect to login page
+  return res.redirect('/login.html');
+});
+
+// ========== API ROUTES (products/orders/chat) ==========
 app.get('/api/products', (req, res) => {
   const { category } = req.query;
   let query = 'SELECT * FROM products';
@@ -107,7 +188,6 @@ app.get('/api/products', (req, res) => {
   });
 });
 
-// GET single product
 app.get('/api/products/:id', (req, res) => {
   db.get('SELECT * FROM products WHERE id = ?', [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -116,8 +196,7 @@ app.get('/api/products/:id', (req, res) => {
   });
 });
 
-// CREATE a product
-app.post('/api/products', (req, res) => {
+app.post('/api/products', requireAuth, (req, res) => {
   const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
   if (!name || price == null) {
     return res.status(400).json({ error: 'Name and price are required' });
@@ -136,8 +215,7 @@ app.post('/api/products', (req, res) => {
   );
 });
 
-// UPDATE a product
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', requireAuth, (req, res) => {
   const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
   if (!name || price == null) {
     return res.status(400).json({ error: 'Name and price are required' });
@@ -157,8 +235,7 @@ app.put('/api/products/:id', (req, res) => {
   );
 });
 
-// DELETE a product
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', requireAuth, (req, res) => {
   db.run('DELETE FROM products WHERE id = ?', [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     if (this.changes === 0) return res.status(404).json({ error: 'Product not found' });
@@ -166,7 +243,6 @@ app.delete('/api/products/:id', (req, res) => {
   });
 });
 
-// POST place an order
 app.post('/api/orders', (req, res) => {
   const { customer, items, total, payment_method, delivery_date } = req.body;
 
@@ -196,8 +272,7 @@ app.post('/api/orders', (req, res) => {
   );
 });
 
-// GET all orders (admin)
-app.get('/api/orders', (req, res) => {
+app.get('/api/orders', requireAuth, (req, res) => {
   db.all(`
     SELECT o.*, c.first_name, c.last_name, c.phone, c.city
     FROM orders o JOIN customers c ON o.customer_id = c.id
@@ -210,7 +285,7 @@ app.get('/api/orders', (req, res) => {
 
 // ========== AI CHAT (Smart Chatbot) ==========
 app.post('/api/chat', (req, res) => {
-  const message = req.body.message.toLowerCase();
+  const message = (req.body.message || '').toLowerCase();
 
   const responses = [
     { keywords: ['weight loss','lose weight','slim','diet','fat'],
@@ -219,45 +294,22 @@ app.post('/api/chat', (req, res) => {
       reply: "🍌 Bananas (RWF 800/bunch) are the #1 energy fruit — packed with potassium and natural sugars! Also try Mangoes (RWF 3,000/kg) for quick energy and Passion Fruits (RWF 2,200/bag) for sustained energy." },
     { keywords: ['vitamin c','immune','cold','flu','sick','immunity'],
       reply: "🍊 Oranges (RWF 1,800/kg) are your best friend for vitamin C and immunity! Lemons (RWF 1,200/bag) and Strawberries (RWF 4,500/punnet) are also excellent immune boosters." },
-    { keywords: ['iron','anemia','blood','hemoglobin'],
-      reply: "🍓 For low iron, try Strawberries (RWF 4,500/punnet) and Watermelon (RWF 3,500) which help iron absorption. Pair with Oranges (RWF 1,800/kg) — vitamin C helps your body absorb iron better!" },
-    { keywords: ['heart','blood pressure','cholesterol','cardiovascular'],
-      reply: "🍇 Grapes (RWF 5,500/kg) are excellent for heart health — rich in resveratrol! Avocados (RWF 1,500/bag) contain healthy fats that lower bad cholesterol. Also try Passion Fruits for potassium." },
-    { keywords: ['digestion','stomach','constipation','gut','bloating'],
-      reply: "🍍 Pineapple (RWF 2,000) contains bromelain which is amazing for digestion! Avocados (RWF 1,500/bag) are high in fiber, and Passion Fruits (RWF 2,200/bag) help regulate your digestive system." },
-    { keywords: ['skin','glow','beauty','acne','face'],
-      reply: "🥭 For glowing skin, Mangoes (RWF 3,000/kg) are rich in vitamin A which promotes skin health! Strawberries (RWF 4,500/punnet) fight acne with antioxidants, and Lemons (RWF 1,200/bag) brighten skin naturally." },
-    { keywords: ['brain','memory','focus','study','concentration'],
-      reply: "🍇 Grapes (RWF 5,500/kg) improve brain function and memory! Avocados (RWF 1,500/bag) contain healthy fats essential for brain health. Bananas (RWF 800/bunch) boost focus with vitamin B6." },
-    { keywords: ['diabetes','sugar','blood sugar','glucose'],
-      reply: "🍓 For managing blood sugar, Strawberries (RWF 4,500/punnet) and Peaches (RWF 4,000/kg) are low glycemic fruits. Avocados (RWF 1,500/bag) help regulate blood sugar with healthy fats." },
-    { keywords: ['pregnancy','pregnant','baby','prenatal'],
-      reply: "🥑 Avocados (RWF 1,500/bag) are perfect during pregnancy — rich in folate! Mangoes (RWF 3,000/kg) provide vitamin A for baby development, and Oranges (RWF 1,800/kg) boost immunity for both mom and baby." },
-    { keywords: ['cheap','affordable','budget','price','cost'],
-      reply: "💰 Our most affordable fruits are Bananas (RWF 800/bunch), Lemons (RWF 1,200/bag), and Avocados (RWF 1,500/bag)! Great quality at great prices, all sourced from Rwandan farms." },
-    { keywords: ['tropical','local','rwanda','fresh'],
-      reply: "🌴 Our best local Rwandan fruits are Bananas from Kirehe, Pineapple from Bugesera (RWF 2,000), Avocados from Nyamasheke (RWF 1,500/bag), and Passion Fruits from Gicumbi (RWF 2,200/bag)!" },
-    { keywords: ['hello','hi','hey','good morning','good afternoon','bonjour','muraho'],
-      reply: "👋 Hello! Welcome to FreshMart! I'm your fruit nutrition assistant. Ask me about fruits for weight loss, energy, immunity, skin health, or any health goal!" },
-    { keywords: ['thank','thanks','merci','murakoze'],
-      reply: "😊 You're welcome! Enjoy your fresh fruits from FreshMart. Stay healthy! 🍎🥭🍋" },
-    { keywords: ['best','recommend','suggestion','which fruit'],
-      reply: "🌟 Our top recommendations are: Avocados (RWF 1,500/bag) for overall health, Bananas (RWF 800/bunch) for energy, Oranges (RWF 1,800/kg) for immunity, and Watermelon (RWF 3,500) for hydration!" },
   ];
 
-  // Find matching response
   for (const item of responses) {
     if (item.keywords.some(k => message.includes(k))) {
       return res.json({ reply: item.reply });
     }
   }
 
-  // Default response
-  res.json({ reply: "🍎 Great question! At FreshMart we have 12 fresh fruits to choose from. Try asking me about fruits for: weight loss, energy, immunity, skin health, digestion, or heart health!" });
+  res.json({ reply: "🍎 Great question! At FreshMart we have many fresh fruits to choose from." });
 });
 
-// Serve frontend for all other routes
-app.get('/{*path}', (req, res) => {
+// Serve static files after protected routes
+app.use(express.static('public'));
+
+// Fallback to index
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

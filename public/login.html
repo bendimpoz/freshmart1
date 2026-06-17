@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FreshMart Admin Signup</title>
+<title>FreshMart Admin Login</title>
 
 <style>
 *{
@@ -92,13 +92,6 @@ h2{
   text-decoration:underline;
 }
 
-.footer-text{
-  text-align:center;
-  margin-top:15px;
-  color:#777;
-  font-size:13px;
-}
-
 .error-text{
   text-align:center;
   color:#c0392b;
@@ -117,7 +110,7 @@ h2{
     Fresh<span>Mart</span>
   </div>
 
-  <h2>Create Account</h2>
+  <h2>Admin Login</h2>
 
   <div class="form-group">
     <input id="username" type="text" placeholder="Username">
@@ -127,25 +120,21 @@ h2{
     <input id="password" type="password" placeholder="Password">
   </div>
 
-  <button class="signup-btn" onclick="signup()">
-    Sign Up
+  <button class="signup-btn" onclick="login()">
+    Log In
   </button>
 
   <div class="error-text" id="errorText"></div>
 
   <div class="login-link">
-    <p>Already have an account?</p>
-    <a href="/login.html">Log In</a>
-  </div>
-
-  <div class="footer-text">
-    Create an admin account to manage products and orders.
+    <p>Don't have an account?</p>
+    <a href="/signup.html">Sign Up</a>
   </div>
 
 </div>
 
 <script>
-async function signup(){
+async function login(){
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   const errorText = document.getElementById('errorText');
@@ -157,7 +146,7 @@ async function signup(){
   }
 
   try{
-    const res = await fetch('/api/signup', {
+    const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -167,7 +156,7 @@ async function signup(){
     if(res.ok){
       window.location.href = '/pages/admin.html';
     } else {
-      errorText.textContent = data.error || 'Signup failed';
+      errorText.textContent = data.error || 'Login failed';
     }
   } catch(e){
     console.error(e);
