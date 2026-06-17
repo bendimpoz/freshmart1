@@ -19,13 +19,11 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Create & connect database
 const db = new sqlite3.Database('./freshmart.db', (err) => {
   if (err) console.error(err.message);
   else console.log('✅ Connected to SQLite database');
 });
 
-// Create tables
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,9 +77,9 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Seed products if empty
   db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
-    if (row && row.count === 0) {
+    if (err) console.error(err.message);
+    else if (row && row.count === 0) {
       const products = [
         ['Red Apples','🍎',2500,'kg','Rubavu, Rwanda','Apples & Pears','Organic'],
         ['Bananas','🍌',800,'bunch','Kirehe, Rwanda','Tropical','Best Seller'],
@@ -104,13 +102,11 @@ db.serialize(() => {
   });
 });
 
-// Helper: auth middleware
 function requireAuth(req, res, next) {
   if (req.session && req.session.userId) return next();
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
-// ========== AUTH ROUTES ==========
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
@@ -164,16 +160,13 @@ app.get('/api/me', (req, res) => {
   res.status(401).json({ error: 'Unauthorized' });
 });
 
-// Protect admin page serving
-app.get('/pages/admin.html', (req, res, next) => {
+app.get('/pages/admin.html', (req, res) => {
   if (req.session && req.session.userId) {
     return res.sendFile(path.join(__dirname, 'public', 'pages', 'admin.html'));
   }
-  // if not logged in, redirect to login page
   return res.redirect('/login.html');
 });
 
-// ========== API ROUTES (products/orders/chat) ==========
 app.get('/api/products', (req, res) => {
   const { category } = req.query;
   let query = 'SELECT * FROM products';
@@ -198,12 +191,10 @@ app.get('/api/products/:id', (req, res) => {
 
 app.post('/api/products', requireAuth, (req, res) => {
   const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
-  if (!name || price == null) {
-    return res.status(400).json({ error: 'Name and price are required' });
-  }
+  if (!name || price == null) return res.status(400).json({ error: 'Name and price are required' });
 
   db.run(
-    `INSERT INTO products (name,emoji,price,unit,origin,category,badge,stock) VALUES (?,?,?,?,?,?,?,?)`,
+    'INSERT INTO products (name,emoji,price,unit,origin,category,badge,stock) VALUES (?,?,?,?,?,?,?,?)',
     [name, emoji, price, unit, origin, category, badge, stock],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -217,12 +208,10 @@ app.post('/api/products', requireAuth, (req, res) => {
 
 app.put('/api/products/:id', requireAuth, (req, res) => {
   const { name, emoji, price, unit, origin, category, badge, stock = 100 } = req.body;
-  if (!name || price == null) {
-    return res.status(400).json({ error: 'Name and price are required' });
-  }
+  if (!name || price == null) return res.status(400).json({ error: 'Name and price are required' });
 
   db.run(
-    `UPDATE products SET name = ?, emoji = ?, price = ?, unit = ?, origin = ?, category = ?, badge = ?, stock = ? WHERE id = ?`,
+    'UPDATE products SET name = ?, emoji = ?, price = ?, unit = ?, origin = ?, category = ?, badge = ?, stock = ? WHERE id = ?',
     [name, emoji, price, unit, origin, category, badge, stock, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -245,9 +234,8 @@ app.delete('/api/products/:id', requireAuth, (req, res) => {
 
 app.post('/api/orders', (req, res) => {
   const { customer, items, total, payment_method, delivery_date } = req.body;
-
   db.run(
-    `INSERT INTO customers (first_name, last_name, phone, email, address, city) VALUES (?,?,?,?,?,?)`,
+    'INSERT INTO customers (first_name, last_name, phone, email, address, city) VALUES (?,?,?,?,?,?)',
     [customer.first_name, customer.last_name, customer.phone, customer.email, customer.address, customer.city],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -255,16 +243,14 @@ app.post('/api/orders', (req, res) => {
       const orderCode = 'FM-' + Date.now().toString().slice(-6);
 
       db.run(
-        `INSERT INTO orders (order_code, customer_id, total, payment_method, delivery_date) VALUES (?,?,?,?,?)`,
+        'INSERT INTO orders (order_code, customer_id, total, payment_method, delivery_date) VALUES (?,?,?,?,?)',
         [orderCode, customerId, total, payment_method, delivery_date],
         function (err) {
           if (err) return res.status(500).json({ error: err.message });
           const orderId = this.lastID;
-
-          const stmt = db.prepare(`INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?,?,?,?)`);
+          const stmt = db.prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?,?,?,?)');
           items.forEach(item => stmt.run([orderId, item.id, item.qty, item.price]));
           stmt.finalize();
-
           res.json({ success: true, order_code: orderCode, order_id: orderId });
         }
       );
@@ -273,42 +259,32 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.get('/api/orders', requireAuth, (req, res) => {
-  db.all(`
-    SELECT o.*, c.first_name, c.last_name, c.phone, c.city
-    FROM orders o JOIN customers c ON o.customer_id = c.id
-    ORDER BY o.created_at DESC
-  `, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  db.all(
+    `SELECT o.*, c.first_name, c.last_name, c.phone, c.city
+     FROM orders o JOIN customers c ON o.customer_id = c.id
+     ORDER BY o.created_at DESC`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
 });
 
-// ========== AI CHAT (Smart Chatbot) ==========
 app.post('/api/chat', (req, res) => {
   const message = (req.body.message || '').toLowerCase();
-
   const responses = [
-    { keywords: ['weight loss','lose weight','slim','diet','fat'],
-      reply: "🍉 For weight loss, I recommend Watermelon (RWF 3,500) — it's 92% water and very low in calories! Also try Peaches (RWF 4,000/kg) and Strawberries (RWF 4,500/punnet) which are low calorie but filling." },
-    { keywords: ['energy','tired','fatigue','boost','sport','exercise'],
-      reply: "🍌 Bananas (RWF 800/bunch) are the #1 energy fruit — packed with potassium and natural sugars! Also try Mangoes (RWF 3,000/kg) for quick energy and Passion Fruits (RWF 2,200/bag) for sustained energy." },
-    { keywords: ['vitamin c','immune','cold','flu','sick','immunity'],
-      reply: "🍊 Oranges (RWF 1,800/kg) are your best friend for vitamin C and immunity! Lemons (RWF 1,200/bag) and Strawberries (RWF 4,500/punnet) are also excellent immune boosters." },
+    { keywords: ['weight loss','lose weight','slim','diet','fat'], reply: '🍉 For weight loss, I recommend Watermelon (RWF 3,500) — it is 92% water and low calorie!' },
+    { keywords: ['energy','tired','fatigue','boost','sport','exercise'], reply: '🍌 Bananas (RWF 800/bunch) are the #1 energy fruit!' },
+    { keywords: ['vitamin c','immune','cold','flu','sick','immunity'], reply: '🍊 Oranges (RWF 1,800/kg) are great for immunity.' },
   ];
-
   for (const item of responses) {
-    if (item.keywords.some(k => message.includes(k))) {
-      return res.json({ reply: item.reply });
-    }
+    if (item.keywords.some(k => message.includes(k))) return res.json({ reply: item.reply });
   }
-
-  res.json({ reply: "🍎 Great question! At FreshMart we have many fresh fruits to choose from." });
+  res.json({ reply: '🍎 Great question! At FreshMart we have many fresh fruits to choose from.' });
 });
 
-// Serve static files after protected routes
 app.use(express.static('public'));
-
-// Fallback to index
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
