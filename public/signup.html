@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -122,41 +122,32 @@ h2{
   <!-- CHANGED BUTTON TEXT -->
   
   <button class="signup-btn" onclick="signup()">
-    SIGN IN
+    Sign In
   </button>
    <p>Already have an account?</p>
 
   <!-- CHANGED TEXT -->
   <div class="login-link">
     <p>Don't have an account?</p>
-    <a href="/pages/admin.html">SIGN UP</a>
+    <a href="/pages/admin.html">Sign Up</a>
   </div>
   <div class="footer-text">
-    Login as admin to manage products and orders.
+    manage products and orders.
   </div>
 
 </div>
 
 <script>
-function signup(){
-
-  const username =
-    document.getElementById('username').value;
-
-  const password =
-    document.getElementById('password').value;
-
-  if(!username || !password){
-    alert('Please enter username and password');
-    return;
-  }
-
-  localStorage.setItem('adminUser', username);
-  localStorage.setItem('adminPass', password);
-
-  alert('Account created successfully');
-
-  window.location.href='/pages/admin.html';
+async function signup(){
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  if(!username || !password){ alert('Please enter username and password'); return; }
+  try{
+    const res = await fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+    const data = await res.json();
+    if(res.ok){ alert('Account created successfully'); window.location.href = '/pages/admin.html'; }
+    else { alert(data.error || 'Signup failed'); }
+  } catch(e){ console.error(e); alert('Network error'); }
 }
 </script>
 
