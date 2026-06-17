@@ -97,7 +97,7 @@
 <nav class="admin-nav">
   <a class="logo" href="/">Fresh<span>Mart</span> <span style="color:rgba(255,255,255,.4);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:400">Admin</span></a>
   <div style="display:flex;gap:24px;align-items:center">
-    <a href="/">â† Back to Store</a>
+    <a href="/">Back to Store</a>
     <a href="/api/orders" target="_blank">API</a>
     <button onclick="logout()" style="background:#EF4444;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;">Log Out</button>
   </div>
@@ -108,7 +108,7 @@
 
   <!-- PAGE TITLE -->
   <div style="margin-bottom:28px">
-    <h1 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#1B2A24">Dashboard ðŸ“Š</h1>
+    <h1 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#1B2A24">Dashboard</h1>
     <p style="color:#6B7280;font-size:15px;margin-top:4px">Welcome back! Here's what's happening with FreshMart.</p>
   </div>
 
@@ -119,8 +119,8 @@
 
   <!-- ORDERS TABLE -->
   <div class="section-header">
-    <h2>Recent Orders ðŸ“¦</h2>
-    <button class="refresh-btn" onclick="loadDashboard()">ðŸ”„ Refresh</button>
+    <h2>Recent Orders</h2>
+    <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -145,8 +145,8 @@
 
   <!-- PRODUCTS TABLE -->
   <div class="section-header">
-    <h2>Products Catalogue ðŸŽ</h2>
-    <button class="refresh-btn" onclick="openProductForm()">âž• Add Product</button>
+    <h2>Products Catalogue</h2>
+    <button class="refresh-btn" onclick="openProductForm()"> Add Product</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -175,12 +175,12 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="productModalTitle">Add Product</h3>
-      <button onclick="closeProductModal()">âœ•</button>
+      <button onclick="closeProductModal()">Completed•</button>
     </div>
     <div class="modal-body" style="display:grid;gap:14px;">
       <input id="productId" type="hidden">
       <div class="form-group"><label>Name</label><input id="productName" type="text" placeholder="Red Apples"></div>
-      <div class="form-group"><label>Emoji</label><input id="productEmoji" type="text" placeholder="ðŸŽ"></div>
+      <div class="form-group"><label>Emoji</label><input id="productEmoji" type="text" placeholder="🍎"></div>
       <div class="form-group"><label>Price</label><input id="productPrice" type="number" placeholder="2500"></div>
       <div class="form-group"><label>Unit</label><input id="productUnit" type="text" placeholder="kg"></div>
       <div class="form-group"><label>Origin</label><input id="productOrigin" type="text" placeholder="Rubavu, Rwanda"></div>
@@ -197,7 +197,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="modalTitle">Order Details</h3>
-      <button onclick="closeModal()">âœ•</button>
+      <button onclick="closeModal()">Completed•</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
@@ -217,7 +217,7 @@ async function loadOrders() {
     renderStats(allOrders);
     renderOrders(allOrders);
   } catch(e) {
-    document.getElementById('ordersBody').innerHTML = '<tr><td colspan="9" class="loading">âŒ Could not load orders.</td></tr>';
+    document.getElementById('ordersBody').innerHTML = '<tr><td colspan="9" class="loading">❌ Could not load orders.</td></tr>';
   }
 }
 
@@ -227,22 +227,22 @@ function renderStats(orders) {
   const completed = orders.filter(o => o.status === 'completed').length;
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon">ðŸ“¦</div>
+      <div class="stat-icon">📦</div>
       <div class="stat-label">Total Orders</div>
       <div class="stat-value">${orders.length}</div>
     </div>
     <div class="stat-card orange">
-      <div class="stat-icon">ðŸ’°</div>
+      <div class="stat-icon">💰</div>
       <div class="stat-label">Total Revenue</div>
       <div class="stat-value">${total.toLocaleString()}</div>
     </div>
     <div class="stat-card blue">
-      <div class="stat-icon">â³</div>
+      <div class="stat-icon">pending</div>
       <div class="stat-label">Pending Orders</div>
       <div class="stat-value">${pending}</div>
     </div>
     <div class="stat-card purple">
-      <div class="stat-icon">âœ…</div>
+      <div class="stat-icon">Completed</div>
       <div class="stat-label">Completed</div>
       <div class="stat-value">${completed}</div>
     </div>
@@ -252,7 +252,7 @@ function renderStats(orders) {
 function renderOrders(orders) {
   const tbody = document.getElementById('ordersBody');
   if (orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><span class="emoji">ðŸ“­</span><p>No orders yet. Share your store!</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><span class="emoji">🛒</span><p>No orders yet. Share your store!</p></div></td></tr>';
     return;
   }
   tbody.innerHTML = orders.map(o => `
@@ -265,9 +265,9 @@ function renderOrders(orders) {
       <td style="font-size:12px">${o.payment_method.replace('Mobile Money ', 'MoMo ')}</td>
       <td>
         <select class="status-select" onchange="updateStatus(${o.id}, this.value)">
-          <option value="pending" ${o.status==='pending'?'selected':''}>â³ Pending</option>
-          <option value="completed" ${o.status==='completed'?'selected':''}>âœ… Completed</option>
-          <option value="cancelled" ${o.status==='cancelled'?'selected':''}>âŒ Cancelled</option>
+          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ Pending</option>
+          <option value="completed" ${o.status==='completed'?'selected':''}>✅ Completed</option>
+          <option value="cancelled" ${o.status==='cancelled'?'selected':''}>❌ Cancelled</option>
         </select>
       </td>
       <td style="font-size:12px;color:var(--gray)">${new Date(o.created_at).toLocaleDateString()}</td>
@@ -286,7 +286,7 @@ async function loadProducts() {
         <td><span style="background:var(--green-pale);color:var(--green);padding:2px 8px;border-radius:50px;font-size:12px;font-weight:600">${p.category}</span></td>
         <td><strong>RWF ${Number(p.price).toLocaleString()}</strong></td>
         <td>${p.unit}</td>
-        <td style="font-size:13px;color:var(--gray)">ðŸ“ ${p.origin}</td>
+        <td style="font-size:13px;color:var(--gray)">📍 ${p.origin}</td>
         <td><span style="background:var(--orange-pale);color:var(--orange);padding:2px 8px;border-radius:50px;font-size:12px;font-weight:600">${p.badge}</span></td>
         <td>${p.stock}</td>
         <td>
@@ -296,7 +296,7 @@ async function loadProducts() {
       </tr>
     `).join('');
   } catch(e) {
-    document.getElementById('productsBody').innerHTML = '<tr><td colspan="8" class="loading">âŒ Could not load products.</td></tr>';
+    document.getElementById('productsBody').innerHTML = '<tr><td colspan="8" class="loading">❌ Could not load products.</td></tr>';
   }
 }
 
@@ -394,7 +394,7 @@ function viewOrder(id) {
     <div class="detail-row"><span>Delivery Date</span><span>${order.delivery_date || 'Not specified'}</span></div>
     <div class="detail-row"><span>Status</span><span class="badge ${order.status}">${order.status}</span></div>
     <div class="detail-row"><span>Order Date</span><span>${new Date(order.created_at).toLocaleString()}</span></div>
-    <div class="items-title">ðŸ›’ Items Ordered</div>
+    <div class="items-title">🛍️ Items Ordered</div>
     <p style="color:var(--gray);font-size:13px">Visit <a href="/api/orders" target="_blank" style="color:var(--green)">/api/orders</a> for full item details.</p>
   `;
   document.getElementById('orderModal').classList.add('open');
